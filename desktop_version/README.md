@@ -1,6 +1,8 @@
-# 손글씨 숫자 인식 (MNIST CNN)
+# 손글씨 숫자 인식 (MNIST CNN) — 데스크톱 버전
 
 마우스로 숫자(0~9)를 그리면 PyTorch로 학습한 합성곱 신경망(CNN)이 어떤 숫자인지 알려주는 프로그램입니다.
+
+> 이 폴더의 모든 명령은 **`desktop_version/` 안에서** 실행해야 합니다(`mnist_cnn.pt`, `./data`가 현재 작업 폴더 기준 상대 경로이기 때문입니다). 웹 브라우저로 쓰는 버전은 `../web_version/`에 있습니다.
 
 ## 파일 구성
 
@@ -13,12 +15,15 @@
 | `make_icon.py` | 바로가기와 앱 창에 쓸 아이콘(`icon.ico`)을 만드는 코드 |
 | `icon.ico` | 앱 아이콘 |
 | `data/` | MNIST 데이터셋 (학습 시 자동 다운로드) |
+| `가중치내보내기.py` | `mnist_cnn.pt`를 웹 버전용 `../web_version/가중치.bin`, `가중치정보.json`으로 내보내기 |
+| `검증데이터만들기.py` | 웹 버전 검증용 정답 데이터를 `../web_version/검증데이터.json`으로 생성 (깃에 넣지 않음) |
 
 ## 설치
 
 Python 3.10 이상이 필요합니다.
 
 ```bash
+cd desktop_version
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install pillow numpy
 ```
@@ -30,6 +35,7 @@ pip install pillow numpy
 ### 1. 학습
 
 ```bash
+cd desktop_version
 python train.py
 ```
 
@@ -40,6 +46,7 @@ python train.py
 ### 2. 손글씨 인식
 
 ```bash
+cd desktop_version
 python app.py
 ```
 
@@ -51,9 +58,20 @@ python app.py
 
 바탕 화면의 **"손글씨 숫자 인식"** 아이콘을 더블 클릭하면 검은 명령 창 없이 앱만 열립니다.
 
-- 바로가기는 `pythonw.exe`(콘솔 창이 없는 파이썬)로 `app.py`를 실행합니다.
-- 아이콘은 `icon.ico`이며, `python make_icon.py`로 다시 만들 수 있습니다.
+- 바로가기는 `pythonw.exe`(콘솔 창이 없는 파이썬)로 `desktop_version\app.py`를 실행합니다.
+- 시작 위치는 `desktop_version` 폴더입니다.
+- 아이콘은 `desktop_version\icon.ico`이며, `python make_icon.py`로 다시 만들 수 있습니다.
 - 작업 표시줄에 고정하려면 바로가기를 **마우스 오른쪽 클릭 → (추가 옵션 표시) → 작업 표시줄에 고정**을 누릅니다.
+
+### 4. 웹 버전용 파일 만들기
+
+웹 버전(`../web_version/`)은 이 폴더의 결과물을 읽습니다. 모델 구조나 정규화 상수, `app.py`의 `전처리()`를 바꾼 뒤에는 아래 스크립트를 다시 실행해야 웹 버전이 계속 데스크톱과 같은 답을 냅니다.
+
+```bash
+cd desktop_version
+python 가중치내보내기.py    # mnist_cnn.pt → ../web_version/가중치.bin, 가중치정보.json
+python 검증데이터만들기.py  # ../web_version/검증데이터.json (웹 버전 검증용, 깃에 넣지 않음)
+```
 
 ## 모델 구조
 
