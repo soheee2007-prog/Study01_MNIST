@@ -127,6 +127,9 @@ export async function 모델_불러오기(경로 = ".") {
   ]);
 
   const 텐서목록 = 정보.텐서;
+  if (!Array.isArray(텐서목록) || 텐서목록.length === 0) {
+    throw new Error("가중치정보.json에 텐서 목록이 없습니다");
+  }
   const 마지막 = 텐서목록[텐서목록.length - 1];
   const 기대바이트 = (마지막.시작 + 마지막.개수) * 4;
   if (버퍼.byteLength % 4 !== 0 || 버퍼.byteLength !== 기대바이트) {

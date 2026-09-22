@@ -17,7 +17,7 @@ python train.py            # 5에폭 학습, 최고 정확도 가중치를 mnist
 python app.py              # 손글씨 인식 앱 실행 (mnist_cnn.pt 필요)
 python make_icon.py        # icon.ico 다시 만들기
 python 가중치내보내기.py    # mnist_cnn.pt → ../web_version/가중치.bin, 가중치정보.json
-python 검증데이터만들기.py  # ../web_version/검증데이터.json 생성 (웹 버전 검증용, 약 25MB, 깃에 없음)
+python 검증데이터만들기.py  # ../web_version/검증데이터.json 생성 (웹 버전 검증용, 약 27MB, 깃에 없음)
 ```
 
 바탕 화면 바로가기는 `pythonw.exe`로 `app.py`를 실행해 콘솔 창 없이 앱을 띄웁니다.

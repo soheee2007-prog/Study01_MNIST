@@ -44,6 +44,7 @@ python -m http.server 8000
 1. 저장소 **Settings → Pages → Source**를 **"GitHub Actions"**로 한 번 설정합니다(사용자가 직접 해야 함).
 2. 이후 `web_version/`을 바꾸고 `main`에 push할 때마다 자동으로 다시 배포됩니다(`workflow_dispatch`로 수동 실행도 가능).
 3. 배포 주소는 `https://<사용자명>.github.io/<저장소 이름>/` 형태입니다(예: `https://soheee2007-prog.github.io/Study01_MNIST/`). 모든 경로가 상대 경로라 이런 하위 경로에서도 그대로 동작합니다.
+4. 배포는 `web_version/` 폴더 전체를 올리므로 `검증.html`도 함께 게시되지만, 검증용 정답 데이터(`검증데이터.json`)는 `.gitignore`에 들어 있어 깃에 없으므로 Pages에서는 "검증데이터.json이 없습니다"만 보이고 실제 검증은 로컬에서만 할 수 있습니다.
 
 ## 검증 결과
 

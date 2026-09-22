@@ -15,6 +15,7 @@ export class 그림판 {
     this.그린것있음 = false;
     this.현재_포인터 = null;   // 지금 그리고 있는 포인터 id
     this.이전_좌표 = null;
+    this.마지막_포인터종류 = "mouse";   // 가장 최근 pointerdown의 pointerType(마우스/터치/펜 구분용)
 
     this.지우기();
 
@@ -22,10 +23,14 @@ export class 그림판 {
     캔버스.addEventListener("pointermove", (이벤트) => this.#움직임(이벤트));
     캔버스.addEventListener("pointerup", (이벤트) => this.#뗌(이벤트));
     캔버스.addEventListener("pointercancel", (이벤트) => this.#뗌(이벤트));
-    // 오른쪽 클릭: 메뉴 대신 지우기 (app.py의 <Button-3>과 같음)
+    // 오른쪽 클릭: 메뉴 대신 지우기 (app.py의 <Button-3>과 같음).
+    // 안드로이드 크롬이나 윈도우 터치·펜에서는 길게 누르면 그리는 도중에도 contextmenu가 발생하는데,
+    // 이때는 메뉴만 막고 지우지도 획을 끊지도 않습니다(마우스 오른쪽 클릭일 때만 지웁니다).
     캔버스.addEventListener("contextmenu", (이벤트) => {
       이벤트.preventDefault();
       if (!this.사용가능) return;
+      const 종류 = 이벤트.pointerType || this.마지막_포인터종류;
+      if (종류 !== "mouse") return;
       this.지우기();
       this.지워짐();
     });
@@ -47,6 +52,7 @@ export class 그림판 {
   }
 
   #누름(이벤트) {
+    this.마지막_포인터종류 = 이벤트.pointerType || "mouse";
     if (!this.사용가능 || 이벤트.button !== 0 || this.현재_포인터 !== null) return;
     이벤트.preventDefault();
     this.현재_포인터 = 이벤트.pointerId;

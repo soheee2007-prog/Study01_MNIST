@@ -67,8 +67,10 @@ cd web_version && python -m http.server 8000
 
 나머지 검사(가중치 파일 형식, 전처리 단독 비교, 빈 그림, 경계 표본, 그린 표본 30장 등)는 성공 기준이 아니라 원인을 좁히기 위한 보조 검사입니다.
 
-`검증데이터.json`은 약 25~27MB(그림이 대부분)라 `.gitignore`에 들어 있고 깃에 커밋하지 않습니다. 저장소에 없으므로 GitHub Pages에도 올라가지 않고, 검증 페이지는 로컬 전용입니다.
+`검증데이터.json`은 약 27MB(그림이 대부분)라 `.gitignore`에 들어 있고 깃에 커밋하지 않습니다. 저장소에 없으므로 GitHub Pages에도 올라가지 않고, 검증 페이지는 로컬 전용입니다.
 
 ## 배포
 
 `main`에 push되면 `.github/workflows/pages.yml`(GitHub Actions)이 이 폴더(`web_version/`)만 GitHub Pages에 올립니다. 저장소 Settings → Pages → Source를 "GitHub Actions"로 한 번 설정해야 동작합니다. 모든 경로가 상대 경로라 `https://soheee2007-prog.github.io/Study01_MNIST/` 같은 하위 경로에서도 그대로 동작합니다.
+
+배포 워크플로는 `web_version/` 폴더 전체를 올리므로 `검증.html`도 함께 배포됩니다. 다만 `검증데이터.json`은 `.gitignore`에 들어 있어 깃에 없으므로, Pages에 올라간 `검증.html`은 "검증데이터.json이 없습니다"만 보여줍니다 — 검증은 로컬 전용입니다.
