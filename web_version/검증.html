@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>검증 중</title>
+<!-- 웹 버전 검증 페이지: 자바스크립트 계산이 파이썬(PyTorch) 결과와 같은지 검사합니다.
+     desktop_version에서 python 검증데이터만들기.py로 검증데이터.json을 만든 뒤,
+     web_version 폴더에서 python -m http.server 8000을 실행하고 이 페이지를 엽니다. -->
+<style>
+  body { font-family: sans-serif; margin: 16px; }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #999; padding: 4px 8px; text-align: left; }
+  .통과 { color: #0a7a0a; font-weight: bold; }
+  .실패 { color: #c00000; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>웹 버전 검증</h1>
+<table id="결과">
+  <thead><tr><th>검사 이름</th><th>기준</th><th>실측</th><th>결과</th></tr></thead>
+  <tbody></tbody>
+</table>
+<p id="요약">검증 중...</p>
+
+<script type="module">
+import {
+  합성곱3x3, 렐루, 최대풀링2, 완전연결, 소프트맥스, 모델_불러오기,
+} from "./모델.js";
+
+// ---------- 러너 ----------
+// 검사는 등록한 순서대로 모두_실행()이 하나씩 실행합니다.
+const 검사목록 = [];
+
+function 검사(이름, 기준, 함수) {
+  검사목록.push({ 이름, 기준, 함수 });
+}
+
+function 행_추가(이름, 기준, 실측, 통과) {
+  const 행 = document.createElement("tr");
+  for (const 글 of [이름, 기준, 실측]) {
+    const 칸 = document.createElement("td");
+    칸.textContent = 글;
+    행.appendChild(칸);
+  }
+  const 결과칸 = document.createElement("td");
+  결과칸.textContent = 통과 ? "통과" : "실패";
+  결과칸.className = 통과 ? "통과" : "실패";
+  행.appendChild(결과칸);
+  document.querySelector("#결과 tbody").appendChild(행);
+}
+
+async function 모두_실행() {
+  let 통과수 = 0;
+  for (const { 이름, 기준, 함수 } of 검사목록) {
+    let 통과 = false;
+    let 실측 = "";
+    try {
+      const 결과 = await 함수();
+      통과 = 결과.통과 === true;
+      실측 = String(결과.실측);
+    } catch (오류) {
+      통과 = false;
+      실측 = "오류: " + (오류 && 오류.message ? 오류.message : String(오류));
+    }
+    if (통과) 통과수++;
+    행_추가(이름, 기준, 실측, 통과);
+  }
+  const 전체 = 검사목록.length;
+  const 실패수 = 전체 - 통과수;
+  document.getElementById("요약").textContent =
+    실패수 === 0 ? `모든 검사 통과 (${통과수}/${전체})` : `실패 ${실패수}개 (전체 ${전체}개 중 통과 ${통과수}개)`;
+  document.title = 실패수 === 0 ? `검증 통과 ${통과수}/${전체}` : `검증 실패 ${실패수}/${전체}`;
+}
+
+// ---------- 보조 함수 ----------
+// base64 문자열을 Uint8Array로 풉니다(검증데이터.json의 "그림").
+function 그림_풀기(base64) {
+  const 이진 = atob(base64);
+  const 배열 = new Uint8Array(이진.length);
+  for (let i = 0; i < 이진.length; i++) 배열[i] = 이진.charCodeAt(i);
+  return 배열;
+}
+
+function 배열_같음(실제, 기대, 허용오차 = 1e-6) {
+  if (실제.length !== 기대.length) return false;
+  for (let i = 0; i < 기대.length; i++) {
+    if (!(Math.abs(실제[i] - 기대[i]) <= 허용오차)) return false;
+  }
+  return true;
+}
+
+function 배열_글(배열) {
+  return "[" + Array.from(배열, (값) => +값.toFixed(6)).join(",") + "]";
+}
+
+function 최대위치(배열) {
+  let 위치 = 0;
+  for (let i = 1; i < 배열.length; i++) if (배열[i] > 배열[위치]) 위치 = i;
+  return 위치;
+}
+
+// 모델은 한 번만 불러와 여러 검사가 함께 씁니다.
+let 모델약속 = null;
+function 모델() {
+  if (!모델약속) 모델약속 = 모델_불러오기(".");
+  return 모델약속;
+}
+
+// ---------- 검증 데이터 불러오기 ----------
+let 데이터;
+try {
+  const 응답 = await fetch("./검증데이터.json");
+  if (!응답.ok) throw new Error(String(응답.status));
+  데이터 = await 응답.json();
+} catch (오류) {
+  데이터 = null;
+}
+
+if (!데이터) {
+  document.getElementById("요약").textContent =
+    "검증데이터.json이 없습니다. desktop_version 폴더에서 python 검증데이터만들기.py를 먼저 실행하세요.";
+  document.title = "검증 실패 1/1";
+} else {
+  // ---------- 검사: 연산 ----------
+  검사("연산: 합성곱 패딩", "[12,21,16,27,45,33,24,39,28]", async () => {
+    const 입력 = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const 출력 = 합성곱3x3(입력, 1, 3, 3, new Float32Array(9).fill(1), new Float32Array([0]), 1);
+    return { 통과: 배열_같음(출력, [12, 21, 16, 27, 45, 33, 24, 39, 28]), 실측: 배열_글(출력) };
+  });
+
+  검사("연산: 최대풀링", "[5,7,13,15]", async () => {
+    const 입력 = new Float32Array(16).map((_, i) => i);
+    const 출력 = 최대풀링2(입력, 1, 4, 4);
+    return { 통과: 배열_같음(출력, [5, 7, 13, 15]), 실측: 배열_글(출력) };
+  });
+
+  검사("연산: 완전연결", "[1,2,4]", async () => {
+    const 출력 = 완전연결(
+      new Float32Array([1, 2]),
+      new Float32Array([1, 0, 0, 1, 1, 1]),
+      new Float32Array([0, 0, 1]),
+      3,
+    );
+    return { 통과: 배열_같음(출력, [1, 2, 4]), 실측: 배열_글(출력) };
+  });
+
+  검사("연산: 소프트맥스", "[1000,1000] → [0.5,0.5], 합=1", async () => {
+    const 출력 = 소프트맥스(new Float32Array([1000, 1000]));
+    const 합 = 출력[0] + 출력[1];
+    return {
+      통과: 배열_같음(출력, [0.5, 0.5]) && Math.abs(합 - 1) <= 1e-6,
+      실측: `${배열_글(출력)}, 합=${합}`,
+    };
+  });
+
+  // ---------- 검사: 가중치 파일 ----------
+  검사("가중치 파일", "텐서 12개, 1,871,272바이트", async () => {
+    await 모델();
+    const 정보응답 = await fetch("./가중치정보.json");
+    const 이진응답 = await fetch("./가중치.bin");
+    if (!정보응답.ok || !이진응답.ok) {
+      return { 통과: false, 실측: `불러오기 실패 (${정보응답.status}, ${이진응답.status})` };
+    }
+    const 정보 = await 정보응답.json();
+    const 바이트 = (await 이진응답.arrayBuffer()).byteLength;
+    const 개수 = 정보.텐서.length;
+    return {
+      통과: 개수 === 12 && 바이트 === 1871272,
+      실측: `텐서 ${개수}개, ${바이트.toLocaleString("en-US")}바이트, 모델_불러오기 성공`,
+    };
+  });
+
+  // ---------- 검사: 순전파 ----------
+  let 자바스크립트확률 = null;
+  async function 전체_추론() {
+    if (자바스크립트확률) return 자바스크립트확률;
+    const { 추론 } = await 모델();
+    const 결과 = 데이터.MNIST.map((표본) => 추론(new Float32Array(표본.전처리)));
+    자바스크립트확률 = { 결과 };
+    return 자바스크립트확률;
+  }
+
+  검사("순전파 일치 (성공 기준)", "확률 최대 절대차 ≤ 1e-4", async () => {
+    const { 결과 } = await 전체_추론();
+    let 최대차 = 0;
+    결과.forEach((확률, i) => {
+      const 기대 = 데이터.MNIST[i].확률;
+      for (let k = 0; k < 10; k++) {
+        const 차 = Math.abs(확률[k] - 기대[k]);
+        if (Number.isNaN(차)) 최대차 = Infinity;  // NaN은 무조건 실패
+        else if (차 > 최대차) 최대차 = 차;
+      }
+    });
+    return {
+      통과: 결과.length === 데이터.MNIST.length && 최대차 <= 1e-4,
+      실측: `최대 절대차 ${최대차.toExponential(1)} (${결과.length}장)`,
+    };
+  });
+
+  검사("순전파 예측 일치", "200/200", async () => {
+    const { 결과 } = await 전체_추론();
+    let 일치 = 0;
+    결과.forEach((확률, i) => {
+      if (최대위치(확률) === 최대위치(데이터.MNIST[i].확률)) 일치++;
+    });
+    return { 통과: 일치 === 데이터.MNIST.length && 일치 === 200, 실측: `${일치}/${데이터.MNIST.length}` };
+  });
+
+  await 모두_실행();
+}
+</script>
+</body>
+</html>
