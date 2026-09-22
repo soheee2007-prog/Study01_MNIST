@@ -4,3 +4,6 @@ __pycache__/
 
 # MNIST 데이터셋 (train.py 실행 시 자동 다운로드)
 data/
+
+# 웹 검증용 정답 데이터 (desktop_version/검증데이터만들기.py로 다시 만듦, 약 25MB)
+web_version/검증데이터.json
