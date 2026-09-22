@@ -1,0 +1,206 @@
+/* 스타일.css: 손글씨 숫자 인식 웹 앱의 화면 꾸미기입니다.
+   넓은 화면에서는 그림판과 결과를 좌우로, 폭 600px 이하에서는 위아래로 놓습니다.
+   그림판 캔버스는 모델 입력이므로 어두운 테마에서도 흰 바탕·검은 선을 유지합니다. */
+
+:root {
+  --배경: #f5f5f5;
+  --글자: #212121;
+  --흐린글자: #616161;
+  --판: #ffffff;
+  --테두리: #bdbdbd;
+  --막대바탕: #eeeeee;
+  --일위색: #2e7d32;
+  --막대색: #1976d2;
+  --단추: #ffffff;
+  --단추테두리: #9e9e9e;
+  --강조: #1976d2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --배경: #121212;
+    --글자: #eeeeee;
+    --흐린글자: #b0b0b0;
+    --판: #1e1e1e;
+    --테두리: #555555;
+    --막대바탕: #333333;
+    --단추: #2a2a2a;
+    --단추테두리: #666666;
+    --강조: #64b5f6;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--배경);
+  color: var(--글자);
+  font-family: "맑은 고딕", "Malgun Gothic", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+#안내-file {
+  max-width: 640px;
+  margin: 0 auto 12px;
+  padding: 10px 12px;
+  border: 1px solid #e0a800;
+  border-radius: 6px;
+  background: #fff8e1;
+  color: #5d4200;
+}
+
+#안내-file[hidden] {
+  display: none;
+}
+
+.배치 {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#그림판 {
+  display: block;
+  flex: none;
+  width: min(280px, 100vw - 32px);
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  background: #ffffff;               /* 모델 입력: 항상 흰 바탕 */
+  outline: 1px solid var(--테두리);   /* 테두리는 좌표 계산에 영향이 없도록 outline으로 */
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#그림판.막힘 {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.결과판 {
+  width: 220px;
+  padding: 12px 16px;
+  background: var(--판);
+  border: 1px solid var(--테두리);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.결과판 h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+#결과 {
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+#확신도 {
+  margin: 0 0 8px;
+  color: var(--흐린글자);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+#후보 {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-family: Consolas, "D2Coding", monospace;
+  font-size: 0.9rem;
+  white-space: pre;
+}
+
+#후보 li:first-child {
+  color: var(--일위색);
+  font-weight: bold;
+}
+
+.막대줄 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.막대이름 {
+  width: 1.2em;
+  font-family: Consolas, monospace;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.막대 {
+  flex: 1;
+  height: 14px;
+  background: var(--막대바탕);
+}
+
+.채움 {
+  width: 0%;
+  height: 100%;
+  background: var(--막대색);
+}
+
+.채움.일위 {
+  background: var(--일위색);
+}
+
+#지우기 {
+  margin-top: 12px;
+  padding: 6px 28px;
+  font: inherit;
+  color: var(--글자);
+  background: var(--단추);
+  border: 1px solid var(--단추테두리);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#지우기:focus-visible {
+  outline: 2px solid var(--강조);
+  outline-offset: 2px;
+}
+
+#지우기:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.도움말 {
+  max-width: 560px;
+  margin: 16px auto 0;
+  color: var(--흐린글자);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .배치 {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .결과판 {
+    width: min(280px, 100%);
+  }
+}
